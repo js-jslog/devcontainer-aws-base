@@ -83,8 +83,10 @@ ls ~/.local/share/nvim/lazy/nvim-treesitter/parser/   # expect lua.so
 ```
 
 Language support for this container's actual work is still to be added, best done on a
-branch from inside the container where you get real feedback. `~/.config/nvim` is a named
-volume so in-progress branch work survives an image rebuild. Priority order:
+branch from inside the container where you get real feedback. **Push that branch before
+rebuilding.** `~/.config/nvim` is a git checkout baked into the image with no volume over
+it, so a rebuild always lands the current `neovim-config` and always discards uncommitted
+edits. Priority order:
 
 1. `terraformls` — highest value, and covers HCL for both IaC tools
 2. `pyright` — Python/boto3
@@ -119,5 +121,12 @@ Each is commented in place; recorded here so they aren't rediscovered the hard w
 - **Every named-volume mount point is pre-created and chowned to `dev`.** Docker creates
   missing mount points as `root:root`, which would leave `dev` unable to write to its own
   Mason or pnpm directories.
+- **`~/.config/nvim` deliberately has no volume**, unlike every other expensive path
+  under `/home/dev`. Docker seeds a named volume from the image only while the volume is
+  empty, so a volume there would mask the Dockerfile's `git clone` after the first run and
+  no image rebuild could ever update the config again. Leaving it as image state means the
+  clone is authoritative and edits worth keeping have to be committed and pushed to
+  `neovim-config`. The trade is that the clone is unpinned: a rebuild takes whatever is on
+  that repo's default branch, which is the one place this image is not reproducible.
 - **`COPY . .` is deliberately last**, unlike node-base, so editing the repo doesn't
   invalidate ~2GB of cached tool layers above it.

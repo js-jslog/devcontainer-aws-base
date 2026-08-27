@@ -112,8 +112,7 @@ RUN npm install -g aws-cdk@2.1139.0 && npm cache clean --force
 # Pre-create every path that devcontainer.json mounts a named volume
 # over. Docker creates missing mount points as root:root, which would
 # leave dev unable to write to its own Mason or pnpm directories.
-RUN mkdir -p /home/dev/.config/nvim \
-             /home/dev/.local/share/nvim \
+RUN mkdir -p /home/dev/.local/share/nvim \
              /home/dev/.local/share/pnpm \
              /home/dev/.aws \
              /home/dev/.kube \
@@ -167,6 +166,10 @@ RUN curl -Lo /tmp/nvim.appimage \
     rm /tmp/nvim.appimage && \
     sudo mv /tmp/squashfs-root /usr/bin/nvim-appimage-extract && \
     sudo ln -s /usr/bin/nvim-appimage-extract/AppRun /usr/bin/nvim
+# Runs as dev, so the checkout is dev-owned and editable in place. This is
+# the only source of the config - no volume is mounted over it, so a rebuild
+# always lands the current neovim-config and always discards local edits.
+# Anything worth keeping gets committed and pushed to that repo.
 RUN git clone https://github.com/js-jslog/neovim-config.git /home/dev/.config/nvim
 
 # Embedded tmux configuration, symlinked into /etc/tmux.conf so it
