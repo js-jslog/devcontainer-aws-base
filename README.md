@@ -32,7 +32,7 @@ docker-in-docker.
 | kubectl / helm / eksctl | 1.37.0 / 4.2.4 / 0.230.0 |
 | neovim | 0.11.2 + [neovim-config](https://github.com/js-jslog/neovim-config) |
 | lazygit / GCM / Claude Code | 0.63.1 / 2.4.1 / latest |
-| jq, less, tcc, ripgrep, tmux | apt |
+| jq, less, tcc + libc6-dev, ripgrep, tmux | apt |
 
 ## Extension
 

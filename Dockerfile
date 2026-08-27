@@ -25,7 +25,7 @@ RUN groupadd -g 1000 dev && \
 
 RUN mkdir -p /app && chown dev:dev /app
 
-# - tcc: C compiler required for neovim LSP
+# - tcc + libc6-dev: required for neovim LSP
 # - ripgrep: required for some neovim telescope functions
 # - libicu74: required by GCM. node-base pulls this in via `rpm` as a
 #   proxy on Debian; on noble we can just name it.
@@ -36,7 +36,7 @@ RUN mkdir -p /app && chown dev:dev /app
 # - python3/venv/pipx: see the PEP 668 note below
 RUN apt-get update && apt-get install -y --no-install-recommends \
       sudo git curl unzip zip xz-utils ca-certificates gnupg less \
-      tcc ripgrep tmux libicu74 jq \
+      tcc libc6-dev ripgrep tmux libicu74 jq \
       python3 python3-venv python3-pip pipx \
  && rm -rf /var/lib/apt/lists/*
 

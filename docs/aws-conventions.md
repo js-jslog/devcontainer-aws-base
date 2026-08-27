@@ -69,8 +69,18 @@ Ubuntu 24.04 refuses system-level `pip install`, failing with
 ## Neovim
 
 The image carries Node, so `neovim-config` works unchanged: `ts_ls`, `eslint` and
-`prettier` all install through Mason as normal. Verified — `nvim --headless "+qa!"` exits
-0 in the image, plugins bootstrap and treesitter parsers compile against `tcc`.
+`prettier` all install through Mason as normal.
+
+Treesitter parsers compile against `tcc`, but only because `libc6-dev` is installed
+alongside it — see the gotcha below. **`nvim --headless "+qa!"` cannot verify this**: it
+exits 0 whether or not any parser builds, because nvim-treesitter compiles asynchronously
+and quits before a compile finishes, and a failed compile is non-fatal regardless. The
+check that actually proves it:
+
+```
+nvim --headless "+TSInstallSync lua" "+qa!"
+ls ~/.local/share/nvim/lazy/nvim-treesitter/parser/   # expect lua.so
+```
 
 Language support for this container's actual work is still to be added, best done on a
 branch from inside the container where you get real feedback. `~/.config/nvim` is a named
@@ -80,7 +90,8 @@ volume so in-progress branch work survives an image rebuild. Priority order:
 2. `pyright` — Python/boto3
 3. `jdtls` — Java; the fiddliest by a wide margin
 4. `yamlls`, `bashls` — CloudFormation, manifests, scripts
-5. Treesitter parsers: `hcl`, `python`, `java`, `yaml`, `bash`, `json`
+5. Treesitter parsers: `hcl`, `python`, `java`, `yaml`, `bash`, `json` — all six, plus
+   `terraform`, are confirmed to build under `tcc`, so no compiler change is needed for them
 
 The image sets `JSLOG_LSP_PROFILE=aws` as a forward-looking hook for a language-profile
 switch in `neovim-config`. **The config does not read it yet** — it is there so the profile
@@ -94,6 +105,13 @@ Each is commented in place; recorded here so they aren't rediscovered the hard w
   the `dev` user can own uid 1000.
 - **The Temurin base has no `xz`**, so `xz-utils` is required to unpack the Node tarball.
   `node:24` includes it; a JDK image does not.
+- **`tcc` alone cannot compile anything on this base**, so `libc6-dev` is installed with it.
+  node-base names only `tcc` and gets away with it: `node:24` derives from buildpack-deps,
+  so gcc and libc6-dev are already present and `cc` resolves to gcc, not tcc. On Temurin
+  neither is present, tcc becomes the only `cc`, and the tcc package ships eight
+  freestanding headers with no `stdint.h` and no `crti.o`. The symptom is every
+  nvim-treesitter parser failing to build on startup with `tcc: error: file 'crti.o' not
+  found`, on any file, with Mason itself perfectly healthy.
 - **`corepack enable` must run as root** (shims go to `/usr/local/bin`) but
   **`corepack prepare` must run as `dev`** (it caches the pinned version under `$HOME`).
   Get the second one wrong and the build still goes green while corepack silently fetches
