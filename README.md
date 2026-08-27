@@ -46,10 +46,14 @@ the Docker Hub resource address you want to use:
 Update the volume name in all the following files appropriately:
 
 - `.devcontainer/devcontainer.json`: the `workspaceMount` source name.
-- `runcontainer.ps1`: the `--filter volume=` & the `volume rm --force` commands.
+- `runcontainer.ps1`: the `$workspaceVolume` variable.
 
 The named volumes in the `mounts` array are shared cache and credential stores. Rename
-them too if you want a project's caches kept separate.
+them too if you want a project's caches kept separate, and mirror the new names into
+`runcontainer.ps1`'s `$homeVolumes` list so `purge` still finds them.
+
+The docker-in-docker volume needs no attention when forking: the feature names it after
+the devcontainer id, so a fork gets its own automatically.
 
 Then follow the Launch from Windows instructions with the additional step of manually
 building and pushing your very first image immediately after cloning:
@@ -75,13 +79,27 @@ There is a prerequisite to have installed the devcontainer CLI.
 
 ```
 git clone https://github.com/js-jslog/devcontainer-aws-base.git
-./runcontainer.ps1 start # replace with `destructive` to replace an existing container and volume.
+./runcontainer.ps1 start
 ```
 
-**Before running `destructive`, destroy any AWS infrastructure currently deployed from the
-container.** With Terraform, local state lives in the workspace volume and goes with it,
-leaving paid resources running and nothing to destroy them with. CDK is safe here, because
-CloudFormation holds state server-side.
+Three modes, in ascending order of how much they throw away:
+
+| Mode | Removes |
+|---|---|
+| `start` | nothing |
+| `destructive` | the container, the `/app` workspace volume, and the docker-in-docker volume |
+| `purge` | all of the above plus every cache and credential volume under `/home/dev` |
+
+**Before running `destructive` or `purge`, destroy any AWS infrastructure currently
+deployed from the container.** With Terraform, local state lives in the workspace volume
+and goes with it, leaving paid resources running and nothing to destroy them with. CDK is
+safe here, because CloudFormation holds state server-side.
+
+`destructive` keeps the `/home/dev` volumes on purpose — they are caches and credentials,
+slow to rebuild and in the case of `~/.aws` and `~/.kube` hand-configured. The consequence
+is that it is *not* a clean slate, so it is the wrong tool for verifying a new image:
+cached Mason downloads and compiled treesitter parsers will make a regressed image look
+healthy. Use `purge` for that, and expect the first start afterwards to be slow.
 
 ### Publish a new image
 
@@ -97,6 +115,9 @@ For simplicity, testing the new container is done back in Windows. Clone a new p
 build a test container on a different volume and with a different name. Edit all the
 locations in the Extension section above for completeness. Start the container and do
 whatever tests are required.
+
+Start that test container with `purge` rather than `start`, so nothing carried over in a
+cache can mask a fault in the image.
 
 ### Broken :latest tag
 
