@@ -1,0 +1,17 @@
+# Scratch space for arbitrary clones and lab exercises
+work/
+
+# IaC noise
+cdk.out/
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# Python
+.venv/
+__pycache__/
+
+# Node
+node_modules/
