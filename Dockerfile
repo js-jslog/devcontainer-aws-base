@@ -111,10 +111,8 @@ RUN npm install -g aws-cdk@2.1139.0 && npm cache clean --force
 
 # Pre-create every path that devcontainer.json mounts a named volume
 # over. Docker creates missing mount points as root:root, which would
-# leave dev unable to write to its own Mason or pnpm directories.
-RUN mkdir -p /home/dev/.local/share/nvim \
-             /home/dev/.local/share/pnpm \
-             /home/dev/.aws \
+# leave dev unable to write to them.
+RUN mkdir -p /home/dev/.aws \
              /home/dev/.kube \
              /home/dev/.gradle \
              /home/dev/.terraform.d/plugin-cache \

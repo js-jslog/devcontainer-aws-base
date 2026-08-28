@@ -97,9 +97,13 @@ safe here, because CloudFormation holds state server-side.
 
 `destructive` keeps the `/home/dev` volumes on purpose — they are caches and credentials,
 slow to rebuild and in the case of `~/.aws` and `~/.kube` hand-configured. The consequence
-is that it is *not* a clean slate, so it is the wrong tool for verifying a new image:
-cached Mason downloads and compiled treesitter parsers will make a regressed image look
-healthy. Use `purge` for that, and expect the first start afterwards to be slow.
+is that it is *not* a clean slate, so it is the wrong tool for verifying a new image: a
+stale Gradle or Terraform plugin cache can make a regressed image look healthy. Use
+`purge` for that, and expect the first start afterwards to be slow.
+
+`~/.local/share/nvim` (Mason/LSP data) and `~/.local/share/pnpm` (the pnpm store) aren't
+volumes at all, so both `destructive` and `purge` already give them a clean slate — a
+re-fetch there has never been a problem in practice.
 
 ### Publish a new image
 

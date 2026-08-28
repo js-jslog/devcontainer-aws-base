@@ -119,10 +119,12 @@ Each is commented in place; recorded here so they aren't rediscovered the hard w
   Get the second one wrong and the build still goes green while corepack silently fetches
   the latest pnpm at runtime instead of the pinned version.
 - **Every named-volume mount point is pre-created and chowned to `dev`.** Docker creates
-  missing mount points as `root:root`, which would leave `dev` unable to write to its own
-  Mason or pnpm directories.
-- **`~/.config/nvim` deliberately has no volume**, unlike every other expensive path
-  under `/home/dev`. Docker seeds a named volume from the image only while the volume is
+  missing mount points as `root:root`, which would leave `dev` unable to write to them.
+- **`~/.local/share/nvim` (Mason/LSP data) and `~/.local/share/pnpm` (the pnpm store) are
+  deliberately not volumes.** Neither has ever needed to survive a rebuild in practice, so
+  a re-fetch is accepted rather than pre-solved.
+- **`~/.config/nvim` deliberately has no volume either**, for a different reason than
+  Mason/pnpm above. Docker seeds a named volume from the image only while the volume is
   empty, so a volume there would mask the Dockerfile's `git clone` after the first run and
   no image rebuild could ever update the config again. Leaving it as image state means the
   clone is authoritative and edits worth keeping have to be committed and pushed to

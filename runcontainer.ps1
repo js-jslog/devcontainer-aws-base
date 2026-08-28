@@ -10,13 +10,11 @@ if ($param1 -ne "start" -and $param1 -ne "destructive" -and $param1 -ne "purge")
 $workspaceVolume = "devcontainer-aws-base-volume"
 
 # The named volumes declared in devcontainer.json under /home/dev. These are
-# caches and credentials rather than work: Mason downloads and LSP indexes,
-# the pnpm store, Gradle and Terraform plugin caches, SSO config, cluster
-# config. `destructive` deliberately keeps them - rebuilding them is slow and
-# ~/.aws and ~/.kube are hand-configured. Only `purge` removes them.
+# caches and credentials rather than work: Gradle and Terraform plugin
+# caches, SSO config, cluster config. `destructive` deliberately keeps them -
+# rebuilding them is slow and ~/.aws and ~/.kube are hand-configured. Only
+# `purge` removes them.
 $homeVolumes = @(
-    "aws-base-nvim-data",
-    "aws-base-pnpm-store",
     "aws-base-aws",
     "aws-base-kube",
     "aws-base-gradle",

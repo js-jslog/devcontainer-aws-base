@@ -12,21 +12,11 @@
   /* Everything below /home/dev lives in the container's writable layer and is
      destroyed on every image bump. These volumes keep the expensive and the
      sensitive out of that layer:
-     - .local/share/nvim : Mason downloads and LSP indexes (the big one)
-     - .local/share/pnpm : pnpm content-addressable store
      - .aws              : SSO config and cached short-lived credentials
      - .kube, .gradle, .terraform.d/plugin-cache : caches and cluster config
      Each target is pre-created and chowned to dev in the Dockerfile; without that
-     Docker would create them root-owned and unwritable.
-
-     Deliberately NOT here: ~/.config/nvim. It is a git checkout of neovim-config
-     baked into the image, and it stays image state. A volume there would mask the
-     Dockerfile's clone forever - Docker seeds a named volume from the image only
-     while the volume is empty - so the config could never be updated by a rebuild.
-     Changes worth keeping get committed and pushed to neovim-config. */
+     Docker would create them root-owned and unwritable. */
   "mounts": [
-    "source=aws-base-nvim-data,target=/home/dev/.local/share/nvim,type=volume",
-    "source=aws-base-pnpm-store,target=/home/dev/.local/share/pnpm,type=volume",
     "source=aws-base-aws,target=/home/dev/.aws,type=volume",
     "source=aws-base-kube,target=/home/dev/.kube,type=volume",
     "source=aws-base-gradle,target=/home/dev/.gradle,type=volume",
