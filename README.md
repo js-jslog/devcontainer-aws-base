@@ -123,6 +123,9 @@ whatever tests are required.
 Start that test container with `purge` rather than `start`, so nothing carried over in a
 cache can mask a fault in the image.
 
+Run `./verify-toolchain.sh` to smoke-test every tool in one pass — offline by default; add
+`--live` (after `aws sso login`) to also round-trip a real CDK deploy/destroy.
+
 ### Broken :latest tag
 
 If you overwrite the `:latest` tag with something which doesn't produce a working
