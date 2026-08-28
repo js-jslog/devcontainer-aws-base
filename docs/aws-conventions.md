@@ -8,13 +8,37 @@ the kind of thing that costs money or time when forgotten.
 1. **Authenticate with IAM Identity Center, not access keys.**
 
    ```
-   aws configure sso
-   aws sso login          # device-code flow; works headless
+   aws configure sso --use-device-code
+   aws sso login --use-device-code
    ```
+
+   The CLI defaults to a browser-redirect (authorization code + PKCE) flow that expects
+   a local callback on some port — this devcontainer forwards no such port, so that
+   login silently fails. `--use-device-code` skips the callback: you get a URL and a
+   short code to enter in any browser (even on the Windows host), and the CLI polls for
+   completion. This is what "works headless" means in practice.
 
    Short-lived credentials, and nothing sensitive ends up in an image layer — which
    matters because **`jslog/*` on Docker Hub is public** (confirmed: `is_private=False`).
    `~/.aws` is a named volume, so config and cached tokens survive image rebuilds.
+
+   `aws configure sso` names the profile it creates after the permission set and
+   account id (e.g. `AdministratorAccess-123456789012`), which means every command
+   needs `--profile <that name>` — including `verify-toolchain.sh --live`, which calls
+   `aws`/`cdk` with no `--profile`. Rename that section header to `[default]` in
+   `~/.aws/config` right after setup so it's picked up with no flag needed:
+
+   ```
+   [default]
+   sso_session = jslog
+   sso_account_id = ...
+   sso_role_name = AdministratorAccess
+   region = eu-west-2
+   ```
+
+   Safe to hand-edit — it's plain text in the `~/.aws` volume. Re-run `aws sso login`
+   (no `--profile` needed once it's `[default]`) to confirm the cached token still
+   resolves under the new name.
 
 2. **Set an AWS Budgets alarm before your first deploy.** Not after.
 
