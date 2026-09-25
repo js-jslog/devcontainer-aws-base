@@ -36,8 +36,39 @@ docker-in-docker.
 
 ## Extension
 
-To fork this for a specific project, update the image name in all the following files to
-the Docker Hub resource address you want to use:
+To start a project from this container, **clone it and re-point `origin`. Do not use
+GitHub's fork button.** A GitHub fork stays in this repository's fork network, and the
+consequence is felt on every pull request: the new repository's PRs default their base to
+*this* repo, so each one is a careless click away from proposing project work into the
+container base. Leaving a fork network afterwards needs GitHub support.
+
+Cloning gives that up for nothing, because keeping this repository as a second remote is
+the only thing the fork relationship was worth.
+
+Create the new repository on GitHub **empty** — no README, no `.gitignore`, no licence. An
+initial commit there conflicts with the history you are about to push. Then:
+
+```
+git clone https://github.com/js-jslog/devcontainer-aws-base.git <project>
+cd <project>
+git remote rename origin upstream
+git remote add origin https://github.com/<user>/<project>.git
+```
+
+Keep `upstream`. Improvements made here can then be pulled in whenever they are wanted:
+
+```
+git fetch upstream && git merge upstream/main
+```
+
+This repository is on `main`, which is the sensible default for a new project too. If the
+project is worked alongside repositories on `master`, rename before the first push —
+`git branch -m main master` — because after the push it is a GitHub-side rename instead.
+Pushing the first branch to an empty repository makes it the default automatically, so
+there is no settings step either way.
+
+Then update the image name in all the following files to the Docker Hub resource address
+you want to use:
 
 - `.devcontainer/devcontainer.json`: the `image` prop.
 - `runcontainer.ps1`: the `docker pull` command.
